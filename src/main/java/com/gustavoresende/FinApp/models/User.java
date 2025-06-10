@@ -25,25 +25,25 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", unique = true)
+    @Column(name = "id", unique = true) // 'unique = true' é redundante para PK, mas não causa problema
     private Long id;
 
-    @NotNull(groups = CreateUser.class)
-    @NotEmpty(groups = CreateUser.class)
+    @NotNull(groups = CreateUser.class, message = "O nome de usuário não pode ser nulo.")
+    @NotEmpty(groups = CreateUser.class, message = "O nome de usuário não pode ser vazio.")
     @Email(message = "O nome de usuário deve ser um email válido.")
     @Column(nullable = false, unique = true, length = 100) // Não nulo, único e com tamanho máximo de 100 caracteres
     private String username; // Geralmente utilizado como o email para login
 
-    @JsonProperty(access = Access.WRITE_ONLY)
-    @NotNull(groups = {CreateUser.class, UpdateUser.class})
-    @NotEmpty(groups = {CreateUser.class, UpdateUser.class})
-    @Size(groups = {CreateUser.class, UpdateUser.class},min = 8, max = 100)
+    @JsonProperty(access = Access.WRITE_ONLY) // A senha só pode ser escrita (definida), não lida diretamente da serialização JSON
+    @NotNull(groups = {CreateUser.class, UpdateUser.class}, message = "A senha não pode ser nula.")
+    @NotEmpty(groups = {CreateUser.class, UpdateUser.class}, message = "A senha não pode ser vazia.")
+    @Size(groups = {CreateUser.class, UpdateUser.class}, min = 8, max = 100, message = "A senha deve ter entre 8 e 100 caracteres.")
     @Column(nullable = false, length = 255) // Não nulo. Armazena a senha criptografada (hashed)
     private String password;
 
-    @NotNull(groups = CreateUser.class)
-    @NotEmpty(groups = CreateUser.class)
-    @Size(groups = CreateUser.class,min = 4, max = 100)
+    @NotNull(groups = CreateUser.class, message = "O nome completo não pode ser nulo.")
+    @NotEmpty(groups = CreateUser.class, message = "O nome completo não pode ser vazio.")
+    @Size(groups = CreateUser.class, min = 4, max = 100, message = "O nome completo deve ter entre 4 e 100 caracteres.")
     @Column(nullable = false, length = 200) // Não nulo
     private String fullName;
 
