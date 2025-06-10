@@ -1,24 +1,50 @@
 package com.gustavoresende.FinApp.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+
 
 @Entity
-@Table(name = "users")
+@Table(name = "user")
 public class User {
+    public interface CreateUser{
+
+    }
+
+    public interface UpdateUser{
+
+    }
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", unique = true)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String username; // Geralmente o email para login
+    @NotNull(groups = CreateUser.class)
+    @NotEmpty(groups = CreateUser.class)
+    @Email(message = "O nome de usuário deve ser um email válido.")
+    @Column(nullable = false, unique = true, length = 100) // Não nulo, único e com tamanho máximo de 100 caracteres
+    private String username; // Geralmente utilizado como o email para login
 
-    @Column(nullable = false)
-    private String password; // Senha hashed
+    @JsonProperty(access = Access.WRITE_ONLY)
+    @NotNull(groups = {CreateUser.class, UpdateUser.class})
+    @NotEmpty(groups = {CreateUser.class, UpdateUser.class})
+    @Size(groups = {CreateUser.class, UpdateUser.class},min = 8, max = 100)
+    @Column(nullable = false, length = 255) // Não nulo. Armazena a senha criptografada (hashed)
+    private String password;
 
-    @Column(nullable = false)
+    @NotNull(groups = CreateUser.class)
+    @NotEmpty(groups = CreateUser.class)
+    @Size(groups = CreateUser.class,min = 4, max = 100)
+    @Column(nullable = false, length = 200) // Não nulo
     private String fullName;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -78,7 +104,7 @@ public class User {
     }
 
     public List<Account> getAccounts() {
-        return accounts;
+        return Collections.unmodifiableList(accounts);
     }
 
     public void setAccounts(List<Account> accounts) {
@@ -86,7 +112,7 @@ public class User {
     }
 
     public List<Transaction> getTransactions() {
-        return transactions;
+        return Collections.unmodifiableList(transactions);
     }
 
     public void setTransactions(List<Transaction> transactions) {
@@ -94,7 +120,7 @@ public class User {
     }
 
     public List<Goal> getGoals() {
-        return goals;
+        return Collections.unmodifiableList(goals);
     }
 
     public void setGoals(List<Goal> goals) {
@@ -118,5 +144,34 @@ public class User {
     public void removeAccount(Account account) {
         this.accounts.remove(account);
         account.setUser(null);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+        if (obj == null)
+            return false;
+        if(! (obj instanceof User)){
+            return false;
+        }
+        User other = (User) obj;
+        if (this.id == null){
+            if (other.id != null)
+                return false;
+            else if(!this.id.equals(other.id))
+                return false;
+        }
+        return Objects.equals(this.id, other.id) && Objects.equals(this.username, other.username)
+                && Objects.equals(this.password, other.password);
+
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (this.id == null ? 0 : this.id.hashCode());
+        return result;
     }
 }
